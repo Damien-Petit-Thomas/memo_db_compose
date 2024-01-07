@@ -1,0 +1,6 @@
+---
+- name: install apache
+  hosts: vm
+  remote_user: root
+  roles: 
+    - apache

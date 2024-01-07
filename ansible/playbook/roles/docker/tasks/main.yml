@@ -1,0 +1,18 @@
+---
+- name: Mise à jour du cache des paquets
+  apt:
+    update_cache: yes
+- name: Installation de Docker
+  apt:
+    name: docker.io
+    state: present
+- name: Démarrage du service Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+- name: Ajout de l'utilisateur au groupe Docker
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes

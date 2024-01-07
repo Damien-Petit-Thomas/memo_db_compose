@@ -1,0 +1,21 @@
+---
+- name: remove nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: absent
+    autoremove: true
+
+- name: install apache2
+  ansible.builtin.apt:
+    name: apache2
+    state: present
+    update_cache: yes
+
+- name: start Apache if not started
+  ansible.builtin.systemd_service:
+    name: apache2
+    state: started
+
+  
+  notify: restart apache
+  
