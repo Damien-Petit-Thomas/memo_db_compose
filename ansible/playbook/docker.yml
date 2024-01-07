@@ -2,5 +2,6 @@
 - name: install docker
   hosts: localhost
   remote_user: root
+  become: yes
   roles: 
     - docker
