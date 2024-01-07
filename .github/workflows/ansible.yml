@@ -19,4 +19,4 @@ jobs:
       - name : run ansible 
         run: | 
           cd /home/student/ansible
-          ansible-playbook  -i etc/hosts -u root playbooks/docker.yml
+          ansible-playbook  -i etc/hosts -u root playbook/docker.yml
