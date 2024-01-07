@@ -1,0 +1,22 @@
+name: deploy ansible
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  run-ansible:
+    runs-on: self-hosted
+
+
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+        
+      - name: copy ansible files
+        run: |
+          rsync -av -P ansible /home/student
+      - name : run ansible 
+        run: | 
+          cd /home/student/ansible
+          ansible-playbook  -i etc/hosts -u root playbooks/docker.yml
