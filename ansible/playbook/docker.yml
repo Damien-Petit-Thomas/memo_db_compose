@@ -1,11 +1,6 @@
 ---
 - name: install docker
-  hosts: vm
-  remote_user: student
-  become: yes
-  become_user: root
-  become_method: sudo
-  vars_files:
-    - 'sudo_password.yml'
+  hosts: localhost
+  remote_user: root
   roles: 
     - docker
