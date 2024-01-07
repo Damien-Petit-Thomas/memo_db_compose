@@ -1,0 +1,45 @@
+
+
+services:
+  proxy:
+    image: httpdproxy
+    container_name: proxy
+    network_mode: host
+
+
+
+  memo_db:
+    image: memo_db
+    container_name: memo_db
+    volumes:
+      - memo_db_data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - 5433:5432
+    depends_on:
+      - proxy
+      
+
+  memo_back:
+    image: memo_back
+    container_name: memo_back
+    
+    restart: always
+    network_mode: host
+    depends_on:
+      - memo_db
+      
+
+  memo_svelte:
+    image: memo_svelte
+    container_name: memo_svelte
+    restart: always
+    network_mode: host
+    depends_on:
+      - memo_back
+      - memo_db
+
+volumes:
+  memo_db_data:
+
+
