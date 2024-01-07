@@ -39,6 +39,7 @@ services:
       - memo_back
       - memo_db
 
+
 volumes:
   memo_db_data:
 
