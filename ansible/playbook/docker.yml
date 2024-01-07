@@ -3,5 +3,8 @@
   hosts: localhost
   remote_user: root
   become: yes
+  become_method: sudo
+  vars_files:
+    - sudo_password.yml
   roles: 
     - docker
