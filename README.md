@@ -3,9 +3,9 @@
 
 pour executer l'application 
 
-`docker-compose -f docker-compose-prod up -d` ou 
-en developpemnent : bien spécifier les chemins pour les  points de montages des volumes 
-`docker-compose -f docker-compose-dev up -d`
+`docker-compose -f docker-compose-prod.yml up -d` ou 
+en developpemnent : bien spécifier les chemins pour les  points de montages des volumes dans le dockerfile
+`docker-compose -f docker-compose-dev.yml up -d`
 
 
 
