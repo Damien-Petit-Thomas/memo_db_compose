@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - 'v*'
+      - '*'
 
 jobs:
   build:
@@ -32,10 +32,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags}}
 
-          - 
-            name: Update repo description
-            uses: peter-evans/dockerhub-description@v3
-            with:
-              username: ${{ secrets.DOCKER_USERNAME }}
-              password: ${{ secrets.DOCKERHHUB_TOKEN }}
-              repository: ${{ env.DOCKER_IMAGE }}
+      - 
+        name: Update repo description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHHUB_TOKEN }}
+          repository: ${{ env.DOCKER_IMAGE }}
