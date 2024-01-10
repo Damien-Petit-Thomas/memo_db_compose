@@ -28,10 +28,10 @@ services:
     image: damiend0cker/memo_back:dev
     container_name: memo_back
     restart: always
-    WORKDIR: /app
-    VOLUME:
+    working_dir: /app
+    volumes:
     # à modifier selon votre arborescence
-      - .:/app
+      - ../memo-back:/app
     ports:
       - 3001:3001
     environment:
@@ -44,10 +44,10 @@ services:
   memo_svelte:
     image: damiend0cker/memo_svelte:dev
     container_name: front
-    WORKDIR: /app
-    VOLUME:
+    working_dir: /app
+    volumes:
     # à modifier selon votre arborescence
-      - .:/app  
+      - ../memo-front:/app  
     restart: always
     depends_on:
       - memo_back
