@@ -9,13 +9,10 @@
 # domain name.
 
 
-api.localhost:80 {
-        reverse_proxy memo_back:3001
+memo.localhost:80    {
+        reverse_proxy front:3000
     } 
 
-memo.localhost:80 {
-    reverse_proxy front:3000
-}
 
 # Refer to the Caddy docs for more information:
 # https://caddyserver.com/docs/caddyfileclea
