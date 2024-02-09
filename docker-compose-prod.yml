@@ -16,7 +16,7 @@ services:
 # le container memo_db est un container postgresql
 # il contient la structure de la base de donnée  et un jeu de données pour l'exemple
   memo_db:
-    image: damiend0cker/memo_db:v.1.0.5
+    image: damiend0cker/memo_db:latest
     restart: on-failure
     container_name: memo_db
     volumes:
