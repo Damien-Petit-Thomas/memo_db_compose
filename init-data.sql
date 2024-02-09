@@ -135,17 +135,18 @@ CREATE TABLE IF NOT EXISTS public.todo
     CONSTRAINT todo_pkey PRIMARY KEY (id)
 );
 
+
+
 CREATE TABLE IF NOT EXISTS public."user"
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    name character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    password character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    email text  COLLATE pg_catalog."default" NOT NULL  UNIQUE CHECK("email" ~ '^[a-z0-9!#$%&''*+/=?^_‘{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_‘{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$'),
+    password text COLLATE pg_catalog."default" NOT NULL,
+    name character varying(50) COLLATE pg_catalog."default" NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
-    CONSTRAINT user_pkey PRIMARY KEY (id)
+    CONSTRAINT user_pkey PRIMARY KEY (id),
 );
-
 
 
 ALTER TABLE IF EXISTS public.lexicon
