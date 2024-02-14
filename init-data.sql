@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.category
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     slug character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
     color character varying(7) COLLATE pg_catalog."default" NOT NULL DEFAULT '#000000'::character varying,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS public.lexicon
     word character varying(100) COLLATE pg_catalog."default" NOT NULL,
     definition text COLLATE pg_catalog."default" NOT NULL,
     category_id integer,
+    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT lexicon_pkey PRIMARY KEY (id),
@@ -60,6 +62,7 @@ CREATE TABLE IF NOT EXISTS public.link
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     url character varying(100) COLLATE pg_catalog."default" NOT NULL,
     "group" character varying(100) COLLATE pg_catalog."default" NOT NULL DEFAULT 'divers'::character varying,
+    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
     category_id integer NOT NULL,
     memo_id integer NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -73,6 +76,7 @@ CREATE TABLE IF NOT EXISTS public.memo
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     title character varying(100) COLLATE pg_catalog."default" NOT NULL,
     category_id integer,
+    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     slug character varying COLLATE pg_catalog."default",
@@ -120,6 +124,7 @@ CREATE TABLE IF NOT EXISTS public.tag
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     slug character varying(100) COLLATE pg_catalog."default" NOT NULL,
     color character varying(7) COLLATE pg_catalog."default" NOT NULL,
+    user_id integer REFERENCES "user" (id) MATCH SIMPLE , 
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT tag_pkey PRIMARY KEY (id)
@@ -130,6 +135,7 @@ CREATE TABLE IF NOT EXISTS public.todo
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     description text COLLATE pg_catalog."default" NOT NULL,
     done boolean NOT NULL DEFAULT false,
+    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT todo_pkey PRIMARY KEY (id)
@@ -757,3 +763,128 @@ $BODY$;
 
 ALTER FUNCTION public.getmemobyslug(text)
     OWNER TO memo;
+
+
+
+CREATE OR REPLACE FUNCTION public.getAllLinksForUser(userId INTEGER)
+RETURNS TABLE (
+  id INT,
+  name VARCHAR(100),
+  url VARCHAR(100),
+  "group" VARCHAR(100),
+  category_slug VARCHAR(100),
+  category_name VARCHAR(100),
+  category_id INT,
+  memo_slug VARCHAR(100),
+  memo_title VARCHAR(100),
+  memo_id INT,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+)
+AS $$
+BEGIN
+  RETURN QUERY (
+    SELECT
+      l.id,
+      l.name,
+      l.url,
+      l."group",
+      c.slug AS category_slug,
+      c.name AS category_name,
+      l.category_id,
+      m.slug AS memo_slug,
+      m.title AS memo_title,
+      l.memo_id,
+      l.created_at,
+      l.updated_at
+    FROM link l
+    JOIN category c ON l.category_id = c.id
+    JOIN memo m ON l.memo_id = m.id
+    WHERE l.user_id = userId
+    ORDER BY l.name
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+alter function public.getAllLinksForUser(integer) owner to memo;
+
+CREATE OR REPLACE FUNCTION public.getAllMemosForUser(userId INTEGER)
+RETURNS jsonb
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  SELECT
+    jsonb_agg(
+      jsonb_build_object(
+        'id', m.id,
+        'title', m.title,
+        'slug', m.slug,
+        'category', jsonb_build_object(
+          'id', m.category_id,
+          'name', c.name,
+          'slug', c.slug,
+          'color', c.color,
+          'created_at', c.created_at,
+          'updated_at', c.updated_at
+        ),
+        'created_at', m.created_at,
+        'updated_at', m.updated_at,
+        'tags', (
+          SELECT
+            jsonb_agg(
+              jsonb_build_object(
+                'id', t.id,
+                'name', t.name,
+                'slug', t.slug,
+                'color', t.color,
+                'created_at', t.created_at,
+                'updated_at', t.updated_at
+              )
+            )
+          FROM memo_tag mt
+          JOIN tag t ON mt.tag_id = t.id
+          WHERE mt.memo_id = m.id
+        ),
+        'contents', (
+          SELECT
+            jsonb_agg(
+              jsonb_build_object(
+                'id', mc.id,
+                'type', jsonb_build_object(
+                  'id', ct.id,
+                  'name', ct.name,
+                  'created_at', ct.created_at,
+                  'updated_at', ct.updated_at
+                ),
+                'style', jsonb_build_object(
+                  'id', s.id,
+                  'name', s.name,
+                  'css', s.css,
+                  'created_at', s.created_at,
+                  'updated_at', s.updated_at
+                ),
+                'position', mc.position,
+                'content', mc.content,
+                'created_at', mc.created_at,
+                'updated_at', mc.updated_at
+              )
+            )
+          FROM memo_content mc
+          JOIN content_type ct ON mc.type_id = ct.id
+          JOIN style s ON mc.style_id = s.id
+          WHERE mc.memo_id = m.id
+        )
+      )
+    )
+  INTO result
+  FROM memo m
+  LEFT JOIN category c ON m.category_id = c.id
+  WHERE m.user_id = userId;
+
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+
+alter function public.getAllMemosForUser(integer) owner to memo;

@@ -10,7 +10,7 @@
 
 
 memo.localhost:80    {
-        reverse_proxy front:3000
+        reverse_proxy front:3333
     } 
 
 

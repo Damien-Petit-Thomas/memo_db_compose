@@ -16,7 +16,7 @@ services:
 # le container memo_db est un container postgresql
 # il contient la structure de la base de donnée  et juste un petit jeu de données pour l'exemple
   memo_db:
-    image: damiend0cker/memo_db:v.1.0.5
+    image: damiend0cker/memo_db:latest
     restart: on-failure
     container_name: memo_db
     volumes:
@@ -26,7 +26,7 @@ services:
 
 
   memo_app:
-    image: damiend0cker/memo_svelte:dev
+    image: devtest
     container_name: front
     hostname: front
     working_dir: /app
@@ -35,7 +35,7 @@ services:
       - ../memo-sveltkit:/app  
     restart: on-failure
     ports:
-      - 3000:3000
+      - 3333:3333
     depends_on:
       - memo_db
     environment:
