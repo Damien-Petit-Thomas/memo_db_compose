@@ -19,18 +19,45 @@ SET row_security = off;
 -- Please log an issue at https://github.com/pgadmin-org/pgadmin4/issues/new/choose if you find any bugs, including reproduction steps.
 BEGIN;
 
+CREATE TABLE IF NOT EXISTS public."user"
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    email text  COLLATE pg_catalog."default" NOT NULL  UNIQUE CHECK("email" ~ '^[a-z0-9!#$%&''*+/=?^_‘{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_‘{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$'),
+    password text COLLATE pg_catalog."default" NOT NULL,
+    name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone,
+    CONSTRAINT user_pkey PRIMARY KEY (id)
+);
 
 CREATE TABLE IF NOT EXISTS public.category
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     slug character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
+    user_id integer, 
     color character varying(7) COLLATE pg_catalog."default" NOT NULL DEFAULT '#000000'::character varying,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT category_pkey PRIMARY KEY (id)
 );
+
+
+
+CREATE TABLE IF NOT EXISTS public.image
+(
+  id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+  original character varying(500) COLLATE pg_catalog."default" NOT NULL,
+  thumbnail character varying(500) COLLATE pg_catalog."default" NOT NULL,
+  user_id integer default null,
+  CONSTRAINT image_pkey PRIMARY KEY (id)
+);
+
+
+
+
+
+
 
 CREATE TABLE IF NOT EXISTS public.content_type
 (
@@ -49,7 +76,7 @@ CREATE TABLE IF NOT EXISTS public.lexicon
     word character varying(100) COLLATE pg_catalog."default" NOT NULL,
     definition text COLLATE pg_catalog."default" NOT NULL,
     category_id integer,
-    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
+    user_id integer,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT lexicon_pkey PRIMARY KEY (id),
@@ -62,7 +89,7 @@ CREATE TABLE IF NOT EXISTS public.link
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     url character varying(100) COLLATE pg_catalog."default" NOT NULL,
     "group" character varying(100) COLLATE pg_catalog."default" NOT NULL DEFAULT 'divers'::character varying,
-    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
+    user_id integer,
     category_id integer NOT NULL,
     memo_id integer NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -75,13 +102,25 @@ CREATE TABLE IF NOT EXISTS public.memo
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     title character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    page_nbr smallint default null,
     category_id integer,
-    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
+    user_id integer,
+    slide_id integer default null,
+    type character varying(50) COLLATE pg_catalog."default" NOT NULL DEFAULT 'memo'::character varying,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     slug character varying COLLATE pg_catalog."default",
+    backgroud_id integer default null,
     CONSTRAINT memo_pkey PRIMARY KEY (id)
 );
+
+
+CREATE TABLE IF NOT EXISTS public.slide (
+  id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+  user_id integer,
+)
+
+
 
 CREATE TABLE IF NOT EXISTS public.memo_content
 (
@@ -89,6 +128,8 @@ CREATE TABLE IF NOT EXISTS public.memo_content
     type_id integer NOT NULL,
     memo_id integer NOT NULL,
     content text COLLATE pg_catalog."default" NOT NULL,
+    css text COLLATE pg_catalog."default" NULL,
+    animation  jsonb COLLATE pg_catalog."default" NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     "position" integer,
@@ -124,7 +165,7 @@ CREATE TABLE IF NOT EXISTS public.tag
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     slug character varying(100) COLLATE pg_catalog."default" NOT NULL,
     color character varying(7) COLLATE pg_catalog."default" NOT NULL,
-    user_id integer REFERENCES "user" (id) MATCH SIMPLE , 
+    user_id integer, 
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT tag_pkey PRIMARY KEY (id)
@@ -135,7 +176,7 @@ CREATE TABLE IF NOT EXISTS public.todo
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     description text COLLATE pg_catalog."default" NOT NULL,
     done boolean NOT NULL DEFAULT false,
-    user_id integer REFERENCES "user" (id) MATCH SIMPLE,
+    user_id integer,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone,
     CONSTRAINT todo_pkey PRIMARY KEY (id)
@@ -143,21 +184,23 @@ CREATE TABLE IF NOT EXISTS public.todo
 
 
 
-CREATE TABLE IF NOT EXISTS public."user"
-(
-    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    email text  COLLATE pg_catalog."default" NOT NULL  UNIQUE CHECK("email" ~ '^[a-z0-9!#$%&''*+/=?^_‘{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_‘{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$'),
-    password text COLLATE pg_catalog."default" NOT NULL,
-    name character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    created_at timestamp with time zone NOT NULL DEFAULT now(),
-    updated_at timestamp with time zone,
-    CONSTRAINT user_pkey PRIMARY KEY (id),
-);
+
+ALTER TABLE public.slide
+  ADD CONSTRAINT slide_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user" (id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE CASCADE;
+
 
 
 ALTER TABLE IF EXISTS public.lexicon
     ADD CONSTRAINT lexicon_category_id_fkey FOREIGN KEY (category_id)
     REFERENCES public.category (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+  
+ALTER TABLE IF EXISTS public.category
+    ADD CONSTRAINT category_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES public."user" (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
@@ -168,6 +211,11 @@ ALTER TABLE IF EXISTS public.link
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
+ALTER TABLE IF EXISTS public.link
+    ADD CONSTRAINT link_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES public."user" (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.link
     ADD CONSTRAINT link_memo_id_fkey FOREIGN KEY (memo_id)
@@ -183,6 +231,19 @@ ALTER TABLE IF EXISTS public.memo
     ON DELETE CASCADE;
 
 
+
+ALTER TABLE IF EXISTS public.memo
+    ADD CONSTRAINT background_id_fkey FOREIGN KEY (backgroud_id)
+    REFERENCES public.image (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+ALTER TABLE IF EXISTS public.memo
+    ADD CONSTRAINT memo_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES public."user" (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
 ALTER TABLE IF EXISTS public.memo
     ADD CONSTRAINT memo_category_id_fkey FOREIGN KEY (category_id)
     REFERENCES public.category (id) MATCH SIMPLE
@@ -195,7 +256,6 @@ ALTER TABLE IF EXISTS public.memo_content
     REFERENCES public.memo (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
-
 
 ALTER TABLE IF EXISTS public.memo_content
     ADD CONSTRAINT memo_content_type_id_fkey FOREIGN KEY (type_id)
@@ -264,10 +324,7 @@ END;
 -- Data for Name: category; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.category (id, name, slug, color, created_at, updated_at) FROM stdin;
-73	Docker	docker	#26a269	2024-01-05 13:09:31.305139+01	\N
-67	Github Action	github-action	#413779	2023-12-13 03:37:24.684047+01	\N
-\.
+
 
 
 --
@@ -282,6 +339,25 @@ COPY public.content_type (id, name, created_at, updated_at, type, available_styl
 7	summary	2023-12-16 15:08:13.142715+01	\N	\N	\N
 10	noteCard	2023-12-17 23:12:25.576574+01	2023-12-17 23:52:00.542548+01	\N	{1,2}
 \.
+
+
+
+
+COPY public.image (original, thumbnail) FROM stdin;
+https://cdn.pixabay.com/photo/2012/03/03/23/06/wall-21534_960_720.jpg	https://cdn.pixabay.com/photo/2012/03/03/23/06/wall-21534_960_720.jpg
+https://cdn.pixabay.com/photo/2016/11/21/13/28/wood-1845389_960_720.jpg	https://cdn.pixabay.com/photo/2016/11/21/13/28/wood-1845389_960_720.jpg
+https://cdn.pixabay.com/photo/2022/11/08/01/34/background-7577472_960_720.jpg	https://cdn.pixabay.com/photo/2022/11/08/01/34/background-7577472_960_720.jpg
+https://cdn.pixabay.com/photo/2016/08/03/09/48/banners-1566213_960_720.jpg	https://cdn.pixabay.com/photo/2016/08/03/09/48/banners-1566213_960_720.jpg
+https://cdn.pixabay.com/photo/2019/04/10/11/56/watercolor-4116932_960_720.png	https://cdn.pixabay.com/photo/2019/04/10/11/56/watercolor-4116932_960_720.png
+https://cdn.pixabay.com/photo/2021/10/29/13/41/template-6751973_960_720.png	https://cdn.pixabay.com/photo/2021/10/29/13/41/template-6751973_960_720.png
+https://cdn.pixabay.com/photo/2016/07/03/07/03/presentation-1494380_640.jpg	https://cdn.pixabay.com/photo/2016/07/03/07/03/presentation-1494380_640.jpg
+https://cdn.pixabay.com/photo/2016/07/03/07/10/background-1494381_640.jpg	https://cdn.pixabay.com/photo/2016/07/03/07/10/background-1494381_640.jpg
+https://cdn.pixabay.com/photo/2021/10/29/07/19/background-6751263_640.jpg	https://cdn.pixabay.com/photo/2021/10/29/07/19/background-6751263_640.jpg
+\.
+
+
+
+
 
 
 --
@@ -580,6 +656,7 @@ BEGIN
                 ),
                 'position', mc.position,
                 'content', mc.content,
+                css, mc.css,
                 'created_at', mc.created_at,
                 'updated_at', mc.updated_at
               )
@@ -820,6 +897,11 @@ BEGIN
         'id', m.id,
         'title', m.title,
         'slug', m.slug,
+        'layout', m.layout,
+        'slideId', m.slide_id,
+        'page', m.page,
+        'backgroundId', m.background_id,
+        'type', m.type,
         'category', jsonb_build_object(
           'id', m.category_id,
           'name', c.name,
@@ -864,6 +946,8 @@ BEGIN
                   'created_at', s.created_at,
                   'updated_at', s.updated_at
                 ),
+                'css', mc.css,
+                'customTransition', mc.animation,
                 'position', mc.position,
                 'content', mc.content,
                 'created_at', mc.created_at,
@@ -888,3 +972,4 @@ $$ LANGUAGE plpgsql;
 
 
 alter function public.getAllMemosForUser(integer) owner to memo;
+²

@@ -26,7 +26,7 @@ services:
 
 
   memo_app:
-    image: devtest
+    image: damiend0cker/memo_svelte:dev
     container_name: front
     hostname: front
     working_dir: /app
@@ -40,7 +40,6 @@ services:
       - memo_db
     environment:
       DATABASE_URL: postgres://memo:memo@memo_db:5432/memo?sslmode=disable
-
 volumes:
   memo_db_data:
 

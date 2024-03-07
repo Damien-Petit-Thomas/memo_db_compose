@@ -8,9 +8,9 @@
 # this machine's public IP, then replace ":80" below with your
 # domain name.
 
-
-memo.localhost:80    {
-        reverse_proxy front:3000
+# modidier le domaine selon votre besoin  
+memo.localhost:80 {
+        reverse_proxy front:3333
     } 
 
 
