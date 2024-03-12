@@ -9,6 +9,10 @@
 # domain name.
 
 # modidier le domaine selon votre besoin  
+# 3000 pour le mode prod  3333 pour le mode dev
+
+
+
 memo.localhost:80 {
         reverse_proxy front:3333
     } 
