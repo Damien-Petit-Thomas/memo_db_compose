@@ -304,6 +304,125 @@ $$;
 
 ALTER FUNCTION public.getallmemosforuser(userid integer) OWNER TO memo;
 
+
+CREATE OR REPLACE FUNCTION public.getallslidesforuser(userid integer) RETURNS jsonb
+    LANGUAGE plpgsql
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  -- Sélectionner tous les slides de l'utilisateur
+  SELECT
+    jsonb_agg(
+      jsonb_build_object(
+        'id', s.id,
+        'title', s.title,
+        'slug', s.slug,
+        'category_id', s.category_id,
+        'category', (
+          CASE
+            WHEN s.category_id IS NOT NULL THEN
+              jsonb_build_object(
+                'id', s.category_id,
+                'name', c.name,
+                'slug', c.slug,
+                'color', c.color,
+                'created_at', c.created_at,
+                'updated_at', c.updated_at
+              )
+            ELSE
+              null
+          END
+        ),
+        'memos', (
+          SELECT
+            jsonb_agg(
+              jsonb_build_object(
+                'id', m.id,
+                'title', m.title,
+                'slug', m.slug,
+                'layout', m.layout,
+                'slideId', m.slide_id,
+                'page', m.page,
+                'backgroundId', m.background_id,
+                'type', m.type,
+                'category', (
+                  SELECT
+                    jsonb_build_object(
+                      'id', m.category_id,
+                      'name', c.name,
+                      'slug', c.slug,
+                      'color', c.color,
+                      'created_at', c.created_at,
+                      'updated_at', c.updated_at
+                    )
+                ),
+                'created_at', m.created_at,
+                'updated_at', m.updated_at,
+                'tags', (
+                  SELECT
+                    jsonb_agg(
+                      jsonb_build_object(
+                        'id', t.id,
+                        'name', t.name,
+                        'slug', t.slug,
+                        'color', t.color,
+                        'created_at', t.created_at,
+                        'updated_at', t.updated_at
+                      )
+                    )
+                  FROM memo_tag mt
+                  JOIN tag t ON mt.tag_id = t.id
+                  WHERE mt.memo_id = m.id
+                ),
+                'contents', (
+                  SELECT
+                    jsonb_agg(
+                      jsonb_build_object(
+                        'id', mc.id,
+                        'type', jsonb_build_object(
+                          'id', ct.id,
+                          'name', ct.name,
+                          'created_at', ct.created_at,
+                          'updated_at', ct.updated_at
+                        ),
+                        'style', jsonb_build_object(
+                          'id', s.id,
+                          'name', s.name,
+                          'css', s.css,
+                          'created_at', s.created_at,
+                          'updated_at', s.updated_at
+                        ),
+                        'position', mc.position,
+                        'content', mc.content,
+                        'created_at', mc.created_at,
+                        'updated_at', mc.updated_at
+                      )
+                    )
+                  FROM memo_content mc
+                  JOIN content_type ct ON mc.type_id = ct.id
+                  JOIN style s ON mc.style_id = s.id
+                  WHERE mc.memo_id = m.id
+                )
+              )
+            )
+          FROM memo m
+          WHERE m.slide_id = s.id
+        )
+      )
+    )
+  INTO result
+  FROM slide s
+  LEFT JOIN category c ON s.category_id = c.id
+  WHERE s.user_id = userid;
+
+  RETURN result;
+END;
+$$;
+
+
+
+ALTER FUNCTION public.getallslidesforuser(userid integer) OWNER TO memo;
 --
 -- Name: getmemo(integer); Type: FUNCTION; Schema: public; Owner: memo
 --
@@ -1214,4 +1333,54 @@ insert into public.style (name, css) values
 --
 -- PostgreSQL database dump complete
 --
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

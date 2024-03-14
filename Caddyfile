@@ -20,3 +20,9 @@ memo.localhost:80 {
 
 # Refer to the Caddy docs for more information:
 # https://caddyserver.com/docs/caddyfileclea
+
+
+
+
+
+alter table slide ad column category_id integer not null on delete cascade;
